@@ -37,7 +37,7 @@ export default {
     },
   },
   createDrawing: {
-    tag: '🎨 Excalidraw: Create New Drawing',
+    tag: 'Excalidraw',
     errorMsg: 'Create excalidraw error',
   },
   common: {

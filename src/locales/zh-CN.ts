@@ -39,7 +39,7 @@ const zhCN: I18N = {
     },
   },
   createDrawing: {
-    tag: '🎨 Excalidraw: 创建新画板',
+    tag: 'Excalidraw',
     errorMsg: '创建画板失败',
   },
   common: {

@@ -28,15 +28,12 @@ export enum EditorTypeEnum {
   App = 'app',
   Page = 'page',
 }
-const WAIT = 1000
-const updatePageProperty = debounce((block: BlockIdentity, key: string, value: string) => {
-  logseq.Editor.upsertBlockProperty(block, key, value)
-}, WAIT)
+const SLIDES_UPDATE_WAIT = 200
 
 const Editor: React.FC<
   React.PropsWithChildren<{
     pageName: string
-    onClose?: () => void
+    onClose?: (props?: { hasSceneChanges: boolean }) => void
     type?: EditorTypeEnum
   }>
 > = ({ pageName, onClose, type = EditorTypeEnum.App }) => {
@@ -62,36 +59,24 @@ const Editor: React.FC<
   const { editor: i18nEditor } = getI18N()
 
   // save excalidraw data to currentExcalidrawDataRef
-  const onExcalidrawChange = debounce(
-    (elements: readonly ExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
-      // const blockData = genBlockData({
-      //   ...excalidrawData,
-      //   elements: excalidrawElements,
-      //   appState: getMinimalAppState(appState),
-      //   files,
-      // });
-      // if (blockUUIDRef.current)
-      //   logseq.Editor.updateBlock(blockUUIDRef.current, blockData);
-      currentExcalidrawDataRef.current = {
-        elements,
-        appState,
-        files,
-      }
-      const sceneVersion = excalidrawModule?.getSceneVersion?.(elements)
-      if (sceneVersion === undefined) return
-      // fix https://github.com/excalidraw/excalidraw/issues/3014
-      if (sceneVersionRef.current !== sceneVersion) {
-        sceneVersionRef.current = sceneVersion
-        // setCurrentExcalidrawData({
-        //   elements,
-        //   appState,
-        //   files,
-        // })
-        updateFrames({ elements, files, theme })
-      }
-    },
-    WAIT,
-  )
+  const updateSlidesPreview = debounce((elements: readonly ExcalidrawElement[], files: BinaryFiles) => {
+    updateFrames({ elements, files, theme })
+  }, SLIDES_UPDATE_WAIT)
+
+  const onExcalidrawChange = (elements: readonly ExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
+    currentExcalidrawDataRef.current = {
+      elements,
+      appState,
+      files,
+    }
+    const sceneVersion = excalidrawModule?.getSceneVersion?.(elements)
+    if (sceneVersion === undefined) return
+    // fix https://github.com/excalidraw/excalidraw/issues/3014
+    if (sceneVersionRef.current !== sceneVersion) {
+      sceneVersionRef.current = sceneVersion
+      updateSlidesPreview(elements, files)
+    }
+  }
   // save library items to page
   const onLibraryChange = (items: LibraryItems) => {
     updateExcalidrawLibraryItems(items)
@@ -104,15 +89,16 @@ const Editor: React.FC<
       duration: 0,
       className: 'max-w-[280px] border-sky-200 bg-sky-50 p-3 pr-7 text-sky-950',
     })
-    setTimeout(async () => {
+    const persistAndClose = async () => {
       try {
-        if (currentExcalidrawDataRef.current && blockUUIDRef.current) {
+        const dataToSave = currentExcalidrawDataRef.current ?? excalidrawData
+        if (dataToSave && blockUUIDRef.current) {
         console.log('[faiz:] === start save')
-        const { elements, appState, files } = currentExcalidrawDataRef.current
+        const { elements, appState, files } = dataToSave
         const blockData = genBlockData({
           ...excalidrawData,
           elements,
-          appState: getMinimalAppState(appState!),
+          appState: appState ? getMinimalAppState(appState) : undefined,
           files,
         })
         await logseq.Editor.updateBlock(blockUUIDRef.current, blockData)
@@ -120,21 +106,23 @@ const Editor: React.FC<
         }
       } finally {
         dismiss()
-        onClose?.()
+        onClose?.({ hasSceneChanges: Boolean(currentExcalidrawDataRef.current) })
       }
-    }, WAIT + 100)
+    }
+
+    void persistAndClose()
   }
 
   const onAliasNameChange = (aliasName: string) => {
     setAliasName(aliasName)
     if (pagePropertyBlockUUIDRef.current) {
-      updatePageProperty(pagePropertyBlockUUIDRef.current, 'excalidraw-plugin-alias', aliasName)
+      void logseq.Editor.upsertBlockProperty(pagePropertyBlockUUIDRef.current, 'excalidraw-plugin-alias', aliasName)
     }
   }
   const onTagChange = (tag: string) => {
     setTag(tag)
     if (pagePropertyBlockUUIDRef.current) {
-      updatePageProperty(pagePropertyBlockUUIDRef.current, 'excalidraw-plugin-tag', tag)
+      void logseq.Editor.upsertBlockProperty(pagePropertyBlockUUIDRef.current, 'excalidraw-plugin-tag', tag)
     }
   }
 
