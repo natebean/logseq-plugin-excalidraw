@@ -1,6 +1,5 @@
-import { exportToSvg } from '@excalidraw/excalidraw'
-
 import type { Theme } from '@/components/Editor'
+import { loadExcalidrawModule } from '@/lib/excalidrawLoader'
 import { NEW_FILE_EXCALIDRAW_DATA } from '@/lib/constants'
 import { getExcalidrawInfoFromPage } from '@/lib/utils'
 import getI18N from '@/locales'
@@ -10,6 +9,7 @@ import type { ExcalidrawData } from '@/type'
 
 export const insertSVG = async (containerId: string, svg?: SVGSVGElement, excalidrawData?: ExcalidrawData) => {
   const theme = await logseq.App.getStateFromStore<Theme>('ui/theme')
+  const { exportToSvg } = await loadExcalidrawModule()
   const _svg =
     svg ??
     (await exportToSvg(
@@ -71,6 +71,7 @@ const bootRenderBlockImage = () => {
 
       const isNewFile = elements?.length === 0 && appState === undefined
       const theme = await logseq.App.getStateFromStore<Theme>('ui/theme')
+      const { exportToSvg } = await loadExcalidrawModule()
 
       const svg = await exportToSvg(
         isNewFile

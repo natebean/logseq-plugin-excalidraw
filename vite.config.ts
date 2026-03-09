@@ -22,6 +22,13 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          excalidraw: ['@excalidraw/excalidraw'],
+        },
+      },
+    },
     // minify: "esbuild",
   },
   define: {

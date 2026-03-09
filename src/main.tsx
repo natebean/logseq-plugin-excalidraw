@@ -2,8 +2,6 @@ import '@logseq/libs'
 import React from 'react'
 import { type Root, createRoot } from 'react-dom/client'
 
-import EditorApp from '@/app/Editor'
-import PreviewApp from '@/app/Preview'
 import bootCommand from '@/bootstrap/command'
 import bootExcalidrawLibraryItems from '@/bootstrap/excalidrawLibraryItems'
 import bootModels from '@/bootstrap/model'
@@ -12,7 +10,6 @@ import { proxyLogseq } from '@/lib/logseqProxy'
 import rewriteAllFont from '@/lib/rewriteFont'
 import { getSettingsSchema } from '@/lib/utils'
 
-import DashboardApp from './app/Dashboard'
 import './index.css'
 
 const isDevelopment = import.meta.env.DEV
@@ -89,19 +86,31 @@ export type RenderAppProps =
       renderSlotId: string
     }
 function renderApp(props: RenderAppProps) {
-  let App: React.ReactNode = null
-  switch (props.mode) {
-    case 'dashboard':
-      App = <DashboardApp />
-      break
-    case 'preview':
-      App = <PreviewApp pageName={props.pageName} />
-      break
-    case 'edit':
-      App = <EditorApp pageName={props.pageName} renderSlotId={props.renderSlotId} />
+  const container = document.getElementById('root')
+  if (!container) return
+
+  const loadAndRender = async () => {
+    let App: React.ReactNode = null
+    switch (props.mode) {
+      case 'dashboard': {
+        const { default: DashboardApp } = await import('@/app/Dashboard')
+        App = <DashboardApp />
+        break
+      }
+      case 'preview': {
+        const { default: PreviewApp } = await import('@/app/Preview')
+        App = <PreviewApp pageName={props.pageName} />
+        break
+      }
+      case 'edit': {
+        const { default: EditorApp } = await import('@/app/Editor')
+        App = <EditorApp pageName={props.pageName} renderSlotId={props.renderSlotId} />
+      }
+    }
+
+    reactAppRoot = createRoot(container)
+    reactAppRoot.render(<React.StrictMode>{App}</React.StrictMode>)
   }
 
-  const container = document.getElementById('root')
-  reactAppRoot = createRoot(container!)
-  reactAppRoot.render(<React.StrictMode>{App}</React.StrictMode>)
+  void loadAndRender()
 }

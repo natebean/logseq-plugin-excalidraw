@@ -1,7 +1,7 @@
-import { exportToSvg } from '@excalidraw/excalidraw'
 import React, { useEffect, useRef } from 'react'
 import { AiFillCloseCircle } from 'react-icons/ai'
 
+import { loadExcalidrawModule } from '@/lib/excalidrawLoader'
 import { getExcalidrawInfoFromPage } from '@/lib/utils'
 
 import type { Theme } from './Editor'
@@ -13,6 +13,7 @@ const Preview: React.FC<React.PropsWithChildren<{ pageName: string }>> = ({ page
     if (pageName) {
       getExcalidrawInfoFromPage(pageName).then(async ({ excalidrawData }) => {
         const theme = await logseq.App.getStateFromStore<Theme>('ui/theme')
+        const { exportToSvg } = await loadExcalidrawModule()
         const svg = await exportToSvg({
           elements: excalidrawData?.elements ?? [],
           appState: {

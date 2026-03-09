@@ -1,4 +1,3 @@
-import { exportToSvg } from '@excalidraw/excalidraw'
 import { useAtom } from 'jotai'
 import { LogOut, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -10,6 +9,7 @@ import TagSelector from '@/components/TagSelector'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Toaster } from '@/components/ui/toaster'
+import { loadExcalidrawModule } from '@/lib/excalidrawLoader'
 import { getExcalidrawInfoFromPage, getExcalidrawPages, getTags, setTheme } from '@/lib/utils'
 import { tagsAtom } from '@/model/tags'
 
@@ -21,6 +21,7 @@ const getAllPages = async (): Promise<IPageWithDrawing[]> => {
   if (!pages) return []
 
   const theme = await logseq.App.getStateFromStore<Theme>('ui/theme')
+  const { exportToSvg } = await loadExcalidrawModule()
   const promises = pages.map(async (page) => {
     const { excalidrawData, rawBlocks } = await getExcalidrawInfoFromPage(page.name)
     const svg = await exportToSvg({

@@ -1,4 +1,3 @@
-import { Excalidraw, Button, MainMenu, WelcomeScreen, getSceneVersion, Footer } from '@excalidraw/excalidraw'
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/types/element/types'
 import type { AppState, BinaryFiles, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types'
 import type { LibraryItems } from '@excalidraw/excalidraw/types/types'
@@ -15,6 +14,7 @@ import { getExcalidrawLibraryItems, updateExcalidrawLibraryItems } from '@/boots
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/use-toast'
 import useSlides from '@/hook/useSlides'
+import { loadExcalidrawModule } from '@/lib/excalidrawLoader'
 import { cn, genBlockData, getExcalidrawInfoFromPage, getLangCode, getMinimalAppState } from '@/lib/utils'
 import getI18N from '@/locales'
 import type { ExcalidrawData, PluginSettings } from '@/type'
@@ -40,6 +40,7 @@ const Editor: React.FC<
     type?: EditorTypeEnum
   }>
 > = ({ pageName, onClose, type = EditorTypeEnum.App }) => {
+  const [excalidrawModule, setExcalidrawModule] = useState<null | typeof import('@excalidraw/excalidraw')>(null)
   const [excalidrawData, setExcalidrawData] = useState<ExcalidrawData>()
   const [libraryItems, setLibraryItems] = useState<LibraryItems>()
   const [theme, setTheme] = useState<Theme>()
@@ -76,7 +77,8 @@ const Editor: React.FC<
         appState,
         files,
       }
-      const sceneVersion = getSceneVersion(elements)
+      const sceneVersion = excalidrawModule?.getSceneVersion?.(elements)
+      if (sceneVersion === undefined) return
       // fix https://github.com/excalidraw/excalidraw/issues/3014
       if (sceneVersionRef.current !== sceneVersion) {
         sceneVersionRef.current = sceneVersion
@@ -155,10 +157,19 @@ const Editor: React.FC<
   useEffect(() => {
     logseq.App.getStateFromStore<Theme>('ui/theme').then(setTheme)
   }, [])
+  useEffect(() => {
+    loadExcalidrawModule().then(setExcalidrawModule)
+  }, [])
+
+  const Excalidraw = excalidrawModule?.Excalidraw
+  const ExcalidrawButton = excalidrawModule?.Button
+  const ExcalidrawMainMenu = excalidrawModule?.MainMenu
+  const ExcalidrawWelcomeScreen = excalidrawModule?.WelcomeScreen
+  const ExcalidrawFooter = excalidrawModule?.Footer
 
   return (
     <div className={cn('w-screen h-screen pt-5 relative', theme === 'dark' ? 'bg-[#121212]' : 'bg-white')}>
-      {excalidrawData && libraryItems && (
+      {excalidrawData && libraryItems && Excalidraw && ExcalidrawButton && ExcalidrawMainMenu && ExcalidrawWelcomeScreen && ExcalidrawFooter && (
         <Excalidraw
           excalidrawAPI={(api) => setExcalidrawAPI(api)}
           langCode={getLangCode((logseq.settings as unknown as PluginSettings)?.langCode)}
@@ -176,14 +187,14 @@ const Editor: React.FC<
             <div className="flex items-center gap-3">
               <Input placeholder="Untitled" value={aliasName} onChange={(e) => onAliasNameChange(e.target.value)} />
               <TagSelector showAdd value={tag} onChange={onTagChange} />
-              <Button
+              <ExcalidrawButton
                 className="!h-[var(--lg-button-size)] !w-auto"
                 onSelect={() => setSlidesModeEnabled((_old) => !_old)}
                 title={i18nEditor.slidesMode}
               >
                 <BiSlideshow className="!w-[14px]" />
-              </Button>
-              <Button
+              </ExcalidrawButton>
+              <ExcalidrawButton
                 className="!h-[var(--lg-button-size)] !w-auto"
                 onSelect={() => onClickClose(type)}
                 title={i18nEditor.exitButton}
@@ -193,63 +204,63 @@ const Editor: React.FC<
                 ) : (
                   <TbArrowsMinimize className="!w-[14px]" />
                 )}
-              </Button>
+              </ExcalidrawButton>
             </div>
           )}
         >
-          <MainMenu>
-            <MainMenu.Item
+          <ExcalidrawMainMenu>
+            <ExcalidrawMainMenu.Item
               icon={<TbBrandGithub />}
               onSelect={() => logseq.App.openExternalLink('https://github.com/haydenull/logseq-plugin-excalidraw')}
             >
               Github
-            </MainMenu.Item>
-            <MainMenu.DefaultItems.Export />
-            <MainMenu.DefaultItems.SaveAsImage />
-            <MainMenu.DefaultItems.ClearCanvas />
-            <MainMenu.DefaultItems.ToggleTheme />
-            <MainMenu.DefaultItems.ChangeCanvasBackground />
-          </MainMenu>
-          <WelcomeScreen>
-            <WelcomeScreen.Hints.ToolbarHint />
-            <WelcomeScreen.Center>
-              <WelcomeScreen.Center.Logo></WelcomeScreen.Center.Logo>
-              <WelcomeScreen.Center.Heading>Logseq Excalidraw Plugin</WelcomeScreen.Center.Heading>
-            </WelcomeScreen.Center>
-          </WelcomeScreen>
-          <Footer>
+            </ExcalidrawMainMenu.Item>
+            <ExcalidrawMainMenu.DefaultItems.Export />
+            <ExcalidrawMainMenu.DefaultItems.SaveAsImage />
+            <ExcalidrawMainMenu.DefaultItems.ClearCanvas />
+            <ExcalidrawMainMenu.DefaultItems.ToggleTheme />
+            <ExcalidrawMainMenu.DefaultItems.ChangeCanvasBackground />
+          </ExcalidrawMainMenu>
+          <ExcalidrawWelcomeScreen>
+            <ExcalidrawWelcomeScreen.Hints.ToolbarHint />
+            <ExcalidrawWelcomeScreen.Center>
+              <ExcalidrawWelcomeScreen.Center.Logo></ExcalidrawWelcomeScreen.Center.Logo>
+              <ExcalidrawWelcomeScreen.Center.Heading>Logseq Excalidraw Plugin</ExcalidrawWelcomeScreen.Center.Heading>
+            </ExcalidrawWelcomeScreen.Center>
+          </ExcalidrawWelcomeScreen>
+          <ExcalidrawFooter>
             {slidesModeEnabled ? (
               <div className="ml-2 flex gap-2 items-center">
-                <Button
+                <ExcalidrawButton
                   className="!h-[var(--lg-button-size)] !w-auto"
                   onSelect={() => setShowSlidesPreview((_old) => !_old)}
                   title={i18nEditor.slidesPreview}
                 >
                   <BsLayoutSidebarInset className="!w-[14px]" />
-                </Button>
-                <Button
+                </ExcalidrawButton>
+                <ExcalidrawButton
                   className="!h-[var(--lg-button-size)] !w-auto"
                   onSelect={() => setShowSlidesOverview(true)}
                   title={i18nEditor.slidesOverview}
                 >
                   <IoAppsOutline className="!w-[14px]" />
-                </Button>
-                <Button
+                </ExcalidrawButton>
+                <ExcalidrawButton
                   className="!h-[var(--lg-button-size)] !w-auto"
                   onSelect={prev}
                   aria-disabled={isFirst}
                   title={i18nEditor.slidesPrev}
                 >
                   <FiArrowLeft className={cn({ 'text-gray-400 !w-[14px]': isFirst })} />
-                </Button>
-                <Button
+                </ExcalidrawButton>
+                <ExcalidrawButton
                   className="!h-[var(--lg-button-size)] !w-auto"
                   onSelect={next}
                   aria-disabled={isLast}
                   title={i18nEditor.slidesNext}
                 >
                   <FiArrowRight className={cn({ 'text-gray-400 !w-[14px]': isLast })} />
-                </Button>
+                </ExcalidrawButton>
                 {activeFrameIndex >= 0 ? (
                   <div className="text-base">
                     <span className="text-lg">{activeFrameIndex + 1}</span>
@@ -258,7 +269,7 @@ const Editor: React.FC<
                 ) : null}
               </div>
             ) : null}
-          </Footer>
+          </ExcalidrawFooter>
         </Excalidraw>
       )}
       {slidesModeEnabled && showSlidesPreview ? <SlidesPreview api={excalidrawAPI} theme={theme} /> : null}
