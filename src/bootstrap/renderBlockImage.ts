@@ -6,6 +6,23 @@ import getI18N from '@/locales'
 import type { ExcalidrawData } from '@/type'
 
 // const DEMO_FILE_ORIGINAL_NAME = "excalidraw-2023-04-24-16-39-01";
+const PAGE_LOOKUP_RETRY_COUNT = 10
+const PAGE_LOOKUP_RETRY_DELAY = 300
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const getPageWithRetry = async (pageName?: string) => {
+  if (!pageName) return null
+
+  for (let attempt = 0; attempt < PAGE_LOOKUP_RETRY_COUNT; attempt += 1) {
+    const page = await logseq.Editor.getPage(pageName)
+    if (page) return page
+
+    await sleep(PAGE_LOOKUP_RETRY_DELAY)
+  }
+
+  return null
+}
 
 export const insertSVG = async (containerId: string, svg?: SVGSVGElement, excalidrawData?: ExcalidrawData) => {
   const theme = await logseq.App.getStateFromStore<Theme>('ui/theme')
@@ -45,7 +62,7 @@ const bootRenderBlockImage = () => {
       const rendered = parent.document.getElementById(slot)?.childElementCount
       if (rendered) return
 
-      const page = await logseq.Editor.getPage(pageName)
+      const page = await getPageWithRetry(pageName)
       if (page === null) {
         return logseq.provideUI({
           key: `excalidraw-${slot}`,
