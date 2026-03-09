@@ -102,6 +102,12 @@ const DashboardApp = () => {
     getAllPages().then(setAllPages)
   }
 
+  const handleEditorClose = () => {
+    setEditorInfo({ show: false })
+    refresh()
+    getTags().then(setTags)
+  }
+
   useEffect(() => {
     getAllPages().then(setAllPages)
   }, [])
@@ -159,7 +165,7 @@ const DashboardApp = () => {
               key={editorInfo.pageName}
               pageName={editorInfo.pageName}
               type={EditorTypeEnum.Page}
-              onClose={() => setEditorInfo({ show: false })}
+              onClose={handleEditorClose}
             />
           </div>
         )}
