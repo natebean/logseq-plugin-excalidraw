@@ -50,6 +50,46 @@ export const insertSVG = async (containerId: string, svg?: SVGSVGElement, excali
   }, 0)
 }
 
+export const updateRenderedMetadata = async (containerId: string, pageName?: string) => {
+  if (!pageName) return
+
+  const page = await getPageWithRetry(pageName)
+  const { rawBlocks } = await getExcalidrawInfoFromPage(pageName)
+  const firstBlock = rawBlocks?.[0]
+  const showTitle = firstBlock?.properties?.excalidrawPluginAlias ?? page?.originalName ?? pageName
+  const showTag = firstBlock?.properties?.excalidrawPluginTag
+
+  setTimeout(() => {
+    const container = parent.document.getElementById(containerId)
+    const titleNode = container?.querySelector?.('.excalidraw-title')
+    const metaNode = container?.querySelector?.('.excalidraw-meta')
+    const existingTagNode = container?.querySelector?.('.excalidraw-tag')
+
+    if (titleNode) {
+      titleNode.textContent = showTitle
+      titleNode.setAttribute('title', showTitle)
+      titleNode.setAttribute('data-page-name', page?.originalName ?? pageName)
+    }
+
+    if (!metaNode) return
+
+    if (showTag) {
+      if (existingTagNode) {
+        existingTagNode.textContent = showTag
+        existingTagNode.setAttribute('title', showTag)
+      } else {
+        const tagNode = parent.document.createElement('div')
+        tagNode.className = 'excalidraw-tag'
+        tagNode.textContent = showTag
+        tagNode.setAttribute('title', showTag)
+        metaNode.appendChild(tagNode)
+      }
+    } else {
+      existingTagNode?.remove?.()
+    }
+  }, 0)
+}
+
 const bootRenderBlockImage = () => {
   const { preview: i18nPreview } = getI18N()
   // render: {{renderer excalidraw, excalidraw-2021-08-31-16-00-00}}
@@ -81,7 +121,7 @@ const bootRenderBlockImage = () => {
       }
 
       // get excalidraw data
-      const { excalidrawData } = await getExcalidrawInfoFromPage(pageName)
+      const { excalidrawData, rawBlocks } = await getExcalidrawInfoFromPage(pageName)
 
       const { elements, appState, files } = excalidrawData
       const id = `excalidraw-${pageName}-${slot}`
@@ -106,14 +146,19 @@ const bootRenderBlockImage = () => {
             },
       )
 
-      const showTitle = page?.propertiesTextValues?.excalidrawPluginAlias ?? page?.originalName
+      const firstBlock = rawBlocks?.[0]
+      const showTitle = firstBlock?.properties?.excalidrawPluginAlias ?? page?.originalName
+      const showTag = firstBlock?.properties?.excalidrawPluginTag
       logseq.provideUI({
         key: `excalidraw-${slot}`,
         slot,
         reset: true,
         template: `<div id="${id}" class="excalidraw-container">
             <div class="excalidraw-toolbar-container">
-              <a data-on-click="navPage" class="excalidraw-title" data-page-name="${page?.originalName}" title="${showTitle}">${showTitle}</a>
+              <div class="excalidraw-meta">
+                <a data-on-click="navPage" class="excalidraw-title" data-page-name="${page?.originalName}" title="${showTitle}">${showTitle}</a>
+                ${showTag ? `<div class="excalidraw-tag" title="${showTag}">${showTag}</div>` : ''}
+              </div>
               <div class="excalidraw-toolbar">
                 <a data-on-click="delete" data-page-name="${page?.originalName}" data-block-id="${uuid}" title="${i18nPreview.deleteButton}">
                   <i class="ti ti-trash"></i>
@@ -154,6 +199,7 @@ const bootRenderBlockImage = () => {
   .excalidraw-toolbar-container {
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
     position: absolute;
@@ -164,11 +210,30 @@ const bootRenderBlockImage = () => {
     padding: 10px 6px;
     background-image: linear-gradient(var(--ls-primary-background-color),transparent);
   }
+  .excalidraw-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
   .excalidraw-title {
     line-height: 16px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .excalidraw-tag {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 180px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 16px;
+    background: color-mix(in srgb, var(--ls-primary-text-color) 12%, transparent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .excalidraw-toolbar {
     display: flex;

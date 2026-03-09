@@ -44,6 +44,7 @@ const zhCN: I18N = {
   },
   common: {
     pageNotFound: '未找到画板对应的文件',
+    untagged: '未分类',
   },
 }
 

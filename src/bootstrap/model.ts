@@ -1,6 +1,6 @@
 import { getExcalidrawInfoFromPage } from "@/lib/utils";
 import { RenderAppProps } from "@/main";
-import { insertSVG } from "./renderBlockImage";
+import { insertSVG, updateRenderedMetadata } from "./renderBlockImage";
 import getI18N from "@/locales";
 
 const bootModels = (renderApp: (props: RenderAppProps) => void) => {
@@ -24,6 +24,7 @@ const bootModels = (renderApp: (props: RenderAppProps) => void) => {
       const containerId = e.dataset.containerId;
       if (!pageName) return logseq.UI.showMsg(i18nCommon.pageNotFound);
       const { excalidrawData } = await getExcalidrawInfoFromPage(pageName);
+      await updateRenderedMetadata(containerId, pageName);
       insertSVG(containerId, undefined, excalidrawData);
     },
     async delete(e) {

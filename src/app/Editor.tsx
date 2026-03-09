@@ -2,7 +2,7 @@ import { useAtom } from "jotai";
 import { Toaster } from "@/components/ui/toaster";
 import Editor, { Theme } from "@/components/Editor";
 import { getExcalidrawInfoFromPage, getTags, setTheme } from "@/lib/utils";
-import { insertSVG } from "@/bootstrap/renderBlockImage";
+import { insertSVG, updateRenderedMetadata } from "@/bootstrap/renderBlockImage";
 import { useEffect } from "react";
 import { tagsAtom } from "@/model/tags";
 
@@ -15,6 +15,7 @@ const EditorApp: React.FC<{ pageName: string; renderSlotId?: string }> = ({
     // refresh render block image
     if (pageName && renderSlotId) {
       const { excalidrawData } = await getExcalidrawInfoFromPage(pageName);
+      await updateRenderedMetadata(renderSlotId, pageName);
       insertSVG(renderSlotId, undefined, excalidrawData);
     }
     logseq.hideMainUI();

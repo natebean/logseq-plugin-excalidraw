@@ -42,5 +42,6 @@ export default {
   },
   common: {
     pageNotFound: 'The page corresponding to the drawing is not found',
+    untagged: 'Untagged',
   },
 }
