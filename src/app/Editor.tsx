@@ -11,7 +11,7 @@ const EditorApp: React.FC<{ pageName: string; renderSlotId?: string }> = ({
   renderSlotId,
 }) => {
   const [, setTags] = useAtom(tagsAtom);
-  const onClose = async () => {
+  const handleClose = async () => {
     // refresh render block image
     if (pageName && renderSlotId) {
       const { excalidrawData } = await getExcalidrawInfoFromPage(pageName);
@@ -31,9 +31,9 @@ const EditorApp: React.FC<{ pageName: string; renderSlotId?: string }> = ({
       <div className="w-screen h-screen flex items-center justify-center overflow-auto">
         <div
           className="w-screen h-screen fixed top-0 left-0"
-          onClick={() => logseq.hideMainUI()}
+          onClick={handleClose}
         ></div>
-        <Editor pageName={pageName} onClose={onClose} />
+        <Editor pageName={pageName} onClose={handleClose} />
       </div>
       <Toaster />
     </>

@@ -4,27 +4,36 @@ const PreviewImage = ({ blobPromise }: { blobPromise: Promise<Blob> }) => {
   const [imageSrc, setImageSrc] = useState<string>()
 
   useEffect(() => {
+    let active = true
+    let objectUrl: string | undefined
+
     const loadImage = async () => {
       try {
         const blob = await blobPromise
-        const imageUrl = URL.createObjectURL(blob)
-        setImageSrc(imageUrl)
+        objectUrl = URL.createObjectURL(blob)
+        if (!active) {
+          URL.revokeObjectURL(objectUrl)
+          return
+        }
+        setImageSrc((previousImageSrc) => {
+          if (previousImageSrc) {
+            URL.revokeObjectURL(previousImageSrc)
+          }
+          return objectUrl
+        })
       } catch (error) {
         console.error('Failed to load image:', error)
       }
     }
 
     loadImage()
-  }, [blobPromise])
-
-  useEffect(() => {
     return () => {
-      // Clean up the URL object when component unmounts
-      if (imageSrc) {
-        URL.revokeObjectURL(imageSrc)
+      active = false
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
       }
     }
-  }, [])
+  }, [blobPromise])
 
   return <div>{imageSrc ? <img src={imageSrc} alt="Image" /> : <div>Loading image...</div>}</div>
 }

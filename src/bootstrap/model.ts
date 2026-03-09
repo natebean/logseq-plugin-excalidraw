@@ -29,10 +29,12 @@ const bootModels = (renderApp: (props: RenderAppProps) => void) => {
     async delete(e) {
       const pageName = e.dataset.pageName;
       if (!pageName) return logseq.UI.showMsg(i18nCommon.pageNotFound);
+      const uuid = e.dataset.blockId;
+      if (uuid) {
+        await logseq.Editor.removeBlock(uuid);
+      }
       await logseq.Editor.deletePage(pageName);
       logseq.UI.showMsg("Delete excalidraw file success", "success");
-      const uuid = e.dataset.blockId;
-      logseq.Editor.removeBlock(uuid);
     },
     async navPage(e) {
       const pageName = e.dataset.pageName;
