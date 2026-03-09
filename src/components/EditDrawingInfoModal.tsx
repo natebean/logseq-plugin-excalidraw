@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -36,9 +35,15 @@ const EditDrawingInfoModal: React.FC<{
 }> = ({ type, drawingData, open, onOpenChange, onOk }) => {
   const [name, setName] = useState(drawingData?.drawAlias || "");
   const [tag, setTag] = useState(drawingData?.drawTag || "");
-  const [isOpen, setIsOpen] = useState(false);
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!open) return;
+
+    setName(drawingData?.drawAlias || "");
+    setTag(drawingData?.drawTag || "");
+  }, [drawingData, open, type]);
 
   const onClickSave = async () => {
     const _name = name?.trim() ?? "";
@@ -58,7 +63,9 @@ const EditDrawingInfoModal: React.FC<{
     }
 
     if (!drawingData) return;
-    const { uuid } = drawingData.drawRawBlocks[0];
+    const pagePropertyBlock = drawingData.drawRawBlocks[0];
+    const uuid = pagePropertyBlock?.uuid;
+    if (!uuid) return;
     if (type === EditTypeEnum.Name) {
       if (_name?.length === 0) {
         return toast({ title: "Name is required", variant: "destructive" });

@@ -98,14 +98,15 @@ const Editor: React.FC<
   }
   // save excalidraw data to page
   const onClickClose = (type?: EditorTypeEnum) => {
-    const { id, dismiss } = toast({
+    const { dismiss } = toast({
       title: i18nEditor.saveToast.title,
       description: i18nEditor.saveToast.description,
       duration: 0,
       className: 'max-w-[280px] border-sky-200 bg-sky-50 p-3 pr-7 text-sky-950',
     })
     setTimeout(async () => {
-      if (currentExcalidrawDataRef.current && blockUUIDRef.current) {
+      try {
+        if (currentExcalidrawDataRef.current && blockUUIDRef.current) {
         console.log('[faiz:] === start save')
         const { elements, appState, files } = currentExcalidrawDataRef.current
         const blockData = genBlockData({
@@ -116,6 +117,8 @@ const Editor: React.FC<
         })
         await logseq.Editor.updateBlock(blockUUIDRef.current, blockData)
         console.log('[faiz:] === end save')
+        }
+      } finally {
         dismiss()
         onClose?.()
       }
