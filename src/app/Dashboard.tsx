@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Toaster } from '@/components/ui/toaster'
+import { refreshRenderedPage } from '@/bootstrap/renderBlockImage'
 import { loadExcalidrawModule } from '@/lib/excalidrawLoader'
 import { getExcalidrawInfoFromPage, getExcalidrawPages, getTags, setTheme } from '@/lib/utils'
 import { tagsAtom } from '@/model/tags'
@@ -134,7 +135,15 @@ const DashboardApp = () => {
     getAllPages().then(setAllPages)
   }
 
-  const handleEditorClose = () => {
+  const handleEditorClose = async ({ hasSceneChanges = false }: { hasSceneChanges?: boolean } = {}) => {
+    if (editorInfo.pageName) {
+      if (hasSceneChanges) {
+        const { excalidrawData } = await getExcalidrawInfoFromPage(editorInfo.pageName)
+        await refreshRenderedPage(editorInfo.pageName, excalidrawData)
+      } else {
+        await refreshRenderedPage(editorInfo.pageName)
+      }
+    }
     setEditorInfo({ show: false })
     refresh()
     getTags().then(setTags)
