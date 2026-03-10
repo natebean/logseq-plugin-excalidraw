@@ -38,7 +38,10 @@ const parseRenderPreset = (value?: string): RenderPreset => {
   return 'card'
 }
 
-const getRenderableExcalidrawData = (excalidrawData?: ExcalidrawData, theme?: Theme) => {
+const getRenderableExcalidrawData = (
+  excalidrawData?: ExcalidrawData,
+  theme?: Theme,
+) => {
   const isNewFile = !excalidrawData?.elements?.length
   if (isNewFile) {
     return {
@@ -82,14 +85,20 @@ export const insertSVG = async (
     (await exportToSvg(getRenderableExcalidrawData(excalidrawData, theme)))
   setTimeout(() => {
     const container = parent.document.getElementById(containerId)
-    const activePreset = preset ?? parseRenderPreset(container?.getAttribute?.('data-preset') || undefined)
+    const activePreset =
+      preset ??
+      parseRenderPreset(container?.getAttribute?.('data-preset') || undefined)
     // remove svg if it exists
     const prevSvg = container?.querySelector?.('.excalidraw-svg')
     if (prevSvg) prevSvg.remove()
 
     // insert preview img
-    const intrinsicWidth = Number(_svg.getAttribute('width')) || RENDER_PRESET_WIDTH[activePreset]
-    const targetWidth = Math.min(intrinsicWidth, RENDER_PRESET_WIDTH[activePreset])
+    const intrinsicWidth =
+      Number(_svg.getAttribute('width')) || RENDER_PRESET_WIDTH[activePreset]
+    const targetWidth = Math.min(
+      intrinsicWidth,
+      RENDER_PRESET_WIDTH[activePreset],
+    )
     _svg.style.width = `${targetWidth}px`
     _svg.style.maxWidth = '100%'
     _svg.style.height = 'auto'
@@ -98,13 +107,19 @@ export const insertSVG = async (
   }, 0)
 }
 
-export const updateRenderedMetadata = async (containerId: string, pageName?: string) => {
+export const updateRenderedMetadata = async (
+  containerId: string,
+  pageName?: string,
+) => {
   if (!pageName) return
 
   const page = await getPageWithRetry(pageName)
   const { rawBlocks } = await getExcalidrawInfoFromPage(pageName)
   const firstBlock = rawBlocks?.[0]
-  const showTitle = firstBlock?.properties?.excalidrawPluginAlias ?? page?.originalName ?? pageName
+  const showTitle =
+    firstBlock?.properties?.excalidrawPluginAlias ??
+    page?.originalName ??
+    pageName
   const showTag = firstBlock?.properties?.excalidrawPluginTag
 
   setTimeout(() => {
@@ -138,10 +153,15 @@ export const updateRenderedMetadata = async (containerId: string, pageName?: str
   }, 0)
 }
 
-export const refreshRenderedPage = async (pageName?: string, excalidrawData?: ExcalidrawData) => {
+export const refreshRenderedPage = async (
+  pageName?: string,
+  excalidrawData?: ExcalidrawData,
+) => {
   if (!pageName) return
 
-  const titleNodes = Array.from(parent.document.querySelectorAll('.excalidraw-title')) as HTMLElement[]
+  const titleNodes = Array.from(
+    parent.document.querySelectorAll('.excalidraw-title'),
+  ) as HTMLElement[]
   const targetContainers = titleNodes
     .filter((node) => node.dataset.pageName === pageName)
     .map((node) => node.closest('.excalidraw-container') as HTMLElement | null)
@@ -180,10 +200,13 @@ const renderStatus = ({
     uuid,
     status: 'status',
     missingCount: 0,
-    retryCount: currentSlotState?.status === 'status' ? (currentSlotState.retryCount ?? 0) : 0,
+    retryCount:
+      currentSlotState?.status === 'status'
+        ? (currentSlotState.retryCount ?? 0)
+        : 0,
     retryUntil:
       currentSlotState?.status === 'status'
-        ? (currentSlotState.retryUntil ?? (Date.now() + STATUS_RETRY_WINDOW_MS))
+        ? (currentSlotState.retryUntil ?? Date.now() + STATUS_RETRY_WINDOW_MS)
         : Date.now() + STATUS_RETRY_WINDOW_MS,
   })
   return logseq.provideUI({
@@ -232,7 +255,8 @@ const renderMacroSlot = async ({
   }
 
   // get excalidraw data
-  const { excalidrawData, rawBlocks } = await getExcalidrawInfoFromPage(pageName)
+  const { excalidrawData, rawBlocks } =
+    await getExcalidrawInfoFromPage(pageName)
 
   const { elements, appState, files } = excalidrawData
   const id = `excalidraw-${pageName}-${slot}`
@@ -240,18 +264,32 @@ const renderMacroSlot = async ({
   const theme = await logseq.App.getStateFromStore<Theme>('ui/theme')
   const { exportToSvg } = await loadExcalidrawModule()
 
-  const svg = await exportToSvg(getRenderableExcalidrawData({
-    elements,
-    appState,
-    files,
-  }, theme))
+  const svg = await exportToSvg(
+    getRenderableExcalidrawData(
+      {
+        elements,
+        appState,
+        files,
+      },
+      theme,
+    ),
+  )
 
   const firstBlock = rawBlocks?.[0]
-  const showTitle = firstBlock?.properties?.excalidrawPluginAlias ?? page?.originalName
+  const showTitle =
+    firstBlock?.properties?.excalidrawPluginAlias ?? page?.originalName
   const showTag = firstBlock?.properties?.excalidrawPluginTag
   const showIndicator = `<div class="excalidraw-kind excalidraw-kind--${preset}">${preset === 'inline' ? 'Excalidraw' : 'EX'}</div>`
-  const tagMarkup = showTag ? `<div class="excalidraw-tag" title="${showTag}">${showTag}</div>` : ''
-  trackedSlots.set(slot, { pageName: page.originalName, preset, uuid, status: 'rendered', missingCount: 0 })
+  const tagMarkup = showTag
+    ? `<div class="excalidraw-tag" title="${showTag}">${showTag}</div>`
+    : ''
+  trackedSlots.set(slot, {
+    pageName: page.originalName,
+    preset,
+    uuid,
+    status: 'rendered',
+    missingCount: 0,
+  })
   await logseq.provideUI({
     key: `excalidraw-${slot}`,
     slot,
@@ -311,9 +349,13 @@ const repairTrackedSlots = () => {
       })
     }
 
-    const hasRenderedContainer = Boolean(slotElement.querySelector('.excalidraw-container'))
+    const hasRenderedContainer = Boolean(
+      slotElement.querySelector('.excalidraw-container'),
+    )
     const hasPreviewSvg = Boolean(slotElement.querySelector('.excalidraw-svg'))
-    const hasStatusCard = Boolean(slotElement.querySelector('.excalidraw-status'))
+    const hasStatusCard = Boolean(
+      slotElement.querySelector('.excalidraw-status'),
+    )
     const needsRepair =
       slotState.status === 'status'
         ? !hasStatusCard
@@ -333,7 +375,10 @@ const repairTrackedSlots = () => {
   })
 }
 
-const hasExpectedSlotContent = (slotId: string, expectedStatus: RenderedSlotState['status']) => {
+const hasExpectedSlotContent = (
+  slotId: string,
+  expectedStatus: RenderedSlotState['status'],
+) => {
   const slotElement = parent.document.getElementById(slotId)
   if (!slotElement) return false
 
@@ -341,7 +386,10 @@ const hasExpectedSlotContent = (slotId: string, expectedStatus: RenderedSlotStat
     return Boolean(slotElement.querySelector('.excalidraw-status'))
   }
 
-  return Boolean(slotElement.querySelector('.excalidraw-container') && slotElement.querySelector('.excalidraw-svg'))
+  return Boolean(
+    slotElement.querySelector('.excalidraw-container') &&
+    slotElement.querySelector('.excalidraw-svg'),
+  )
 }
 
 const retryTrackedStatusSlots = () => {
@@ -350,7 +398,11 @@ const retryTrackedStatusSlots = () => {
     const slotElement = parent.document.getElementById(slot)
     if (!slotElement) return
     if (slotState.status !== 'status' || repairingSlots.has(slot)) return
-    if ((slotState.retryUntil ?? 0) <= now || (slotState.retryCount ?? 0) >= STATUS_RETRY_MAX_ATTEMPTS) return
+    if (
+      (slotState.retryUntil ?? 0) <= now ||
+      (slotState.retryCount ?? 0) >= STATUS_RETRY_MAX_ATTEMPTS
+    )
+      return
 
     trackedSlots.set(slot, {
       ...slotState,
@@ -406,25 +458,31 @@ const scheduleRepairRetry = () => {
 const bootRenderBlockImage = () => {
   const { preview: i18nPreview } = getI18N()
   // render: {{renderer excalidraw, excalidraw-2021-08-31-16-00-00}}
-  logseq.App.onMacroRendererSlotted(async ({ slot, payload: { arguments: args, uuid } }) => {
-    const slotType = args?.[0]
-    if (slotType === 'excalidraw') {
-      const pageName = args?.[1]
-      const preset = parseRenderPreset(args?.[2])
-      trackedSlots.set(slot, { pageName, preset, uuid, status: 'status' })
+  logseq.App.onMacroRendererSlotted(
+    async ({ slot, payload: { arguments: args, uuid } }) => {
+      const slotType = args?.[0]
+      if (slotType === 'excalidraw') {
+        const pageName = args?.[1]
+        const preset = parseRenderPreset(args?.[2])
+        trackedSlots.set(slot, { pageName, preset, uuid, status: 'status' })
 
-      if (hasExpectedSlotContent(slot, 'rendered') || hasExpectedSlotContent(slot, 'status')) return
-      await renderMacroSlot({ slot, pageName, uuid, preset })
-      scheduleRepairRetry()
-    } else if (slotType === 'excalidraw-menu') {
-      logseq.provideUI({
-        key: `excalidraw-${slot}`,
-        slot,
-        reset: true,
-        template: `WIP`,
-      })
-    }
-  })
+        if (
+          hasExpectedSlotContent(slot, 'rendered') ||
+          hasExpectedSlotContent(slot, 'status')
+        )
+          return
+        await renderMacroSlot({ slot, pageName, uuid, preset })
+        scheduleRepairRetry()
+      } else if (slotType === 'excalidraw-menu') {
+        logseq.provideUI({
+          key: `excalidraw-${slot}`,
+          slot,
+          reset: true,
+          template: `WIP`,
+        })
+      }
+    },
+  )
   ensureRepairObserver()
   repairTrackedSlots()
   scheduleRepairRetry()
