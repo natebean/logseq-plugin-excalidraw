@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/natebean/logseq-plugin-excalidraw/compare/v1.5.1...v1.6.0) (2026-03-21)
+
+
+### Features
+
+* enhance drawing metadata, renderer stability, and dashboard improvements ([10a4dac](https://github.com/natebean/logseq-plugin-excalidraw/commit/10a4daced5141cb0425cb281f4195c5d04e5a589))
+
 # 1.0.0 (2026-03-21)
 
 
