@@ -1,3 +1,5 @@
 module.exports = {
-  ...require("@haydenull/fabric/prettier"),
+  singleQuote: true,
+  semi: false,
+  trailingComma: 'all',
 }

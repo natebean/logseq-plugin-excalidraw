@@ -1,6 +1,6 @@
 import { getExcalidrawInfoFromPage } from "@/lib/utils";
 import { RenderAppProps } from "@/main";
-import { insertSVG } from "./renderBlockImage";
+import { insertSVG, updateRenderedMetadata } from "./renderBlockImage";
 import getI18N from "@/locales";
 
 const bootModels = (renderApp: (props: RenderAppProps) => void) => {
@@ -24,15 +24,18 @@ const bootModels = (renderApp: (props: RenderAppProps) => void) => {
       const containerId = e.dataset.containerId;
       if (!pageName) return logseq.UI.showMsg(i18nCommon.pageNotFound);
       const { excalidrawData } = await getExcalidrawInfoFromPage(pageName);
+      await updateRenderedMetadata(containerId, pageName);
       insertSVG(containerId, undefined, excalidrawData);
     },
     async delete(e) {
       const pageName = e.dataset.pageName;
       if (!pageName) return logseq.UI.showMsg(i18nCommon.pageNotFound);
+      const uuid = e.dataset.blockId;
+      if (uuid) {
+        await logseq.Editor.removeBlock(uuid);
+      }
       await logseq.Editor.deletePage(pageName);
       logseq.UI.showMsg("Delete excalidraw file success", "success");
-      const uuid = e.dataset.blockId;
-      logseq.Editor.removeBlock(uuid);
     },
     async navPage(e) {
       const pageName = e.dataset.pageName;

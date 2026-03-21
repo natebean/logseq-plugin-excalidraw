@@ -2,7 +2,7 @@ import { useAtom } from "jotai";
 import { Toaster } from "@/components/ui/toaster";
 import Editor, { Theme } from "@/components/Editor";
 import { getExcalidrawInfoFromPage, getTags, setTheme } from "@/lib/utils";
-import { insertSVG } from "@/bootstrap/renderBlockImage";
+import { insertSVG, refreshRenderedPage, updateRenderedMetadata } from "@/bootstrap/renderBlockImage";
 import { useEffect } from "react";
 import { tagsAtom } from "@/model/tags";
 
@@ -11,11 +11,16 @@ const EditorApp: React.FC<{ pageName: string; renderSlotId?: string }> = ({
   renderSlotId,
 }) => {
   const [, setTags] = useAtom(tagsAtom);
-  const onClose = async () => {
-    // refresh render block image
+  const handleClose = async ({ hasSceneChanges = false }: { hasSceneChanges?: boolean } = {}) => {
     if (pageName && renderSlotId) {
-      const { excalidrawData } = await getExcalidrawInfoFromPage(pageName);
-      insertSVG(renderSlotId, undefined, excalidrawData);
+      await updateRenderedMetadata(renderSlotId, pageName);
+      if (hasSceneChanges) {
+        const { excalidrawData } = await getExcalidrawInfoFromPage(pageName);
+        insertSVG(renderSlotId, undefined, excalidrawData);
+        await refreshRenderedPage(pageName, excalidrawData);
+      }
+    } else if (pageName) {
+      await refreshRenderedPage(pageName)
     }
     logseq.hideMainUI();
   };
@@ -31,9 +36,9 @@ const EditorApp: React.FC<{ pageName: string; renderSlotId?: string }> = ({
       <div className="w-screen h-screen flex items-center justify-center overflow-auto">
         <div
           className="w-screen h-screen fixed top-0 left-0"
-          onClick={() => logseq.hideMainUI()}
+          onClick={() => handleClose({ hasSceneChanges: Boolean(false) })}
         ></div>
-        <Editor pageName={pageName} onClose={onClose} />
+        <Editor pageName={pageName} onClose={handleClose} />
       </div>
       <Toaster />
     </>

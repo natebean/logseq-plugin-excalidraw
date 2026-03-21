@@ -39,11 +39,12 @@ const zhCN: I18N = {
     },
   },
   createDrawing: {
-    tag: '🎨 Excalidraw: 创建新画板',
+    tag: 'Excalidraw',
     errorMsg: '创建画板失败',
   },
   common: {
     pageNotFound: '未找到画板对应的文件',
+    untagged: '未分类',
   },
 }
 

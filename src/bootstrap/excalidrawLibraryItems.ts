@@ -1,7 +1,7 @@
 import type { LibraryItems } from '@excalidraw/excalidraw/types/types'
 
 import { DEFAULT_EXCALIDRAW_LIBRARY_ITEMS, EXCALIDRAW_FILE_PROMPT } from '@/lib/constants'
-import { genBlockData, getExcalidrawData } from '@/lib/utils'
+import { findSerializedDataBlock, genBlockData, getExcalidrawData } from '@/lib/utils'
 
 const PAGE_NAME = 'excalidraw-library-items-storage'
 /**
@@ -22,14 +22,15 @@ const bootExcalidrawLibraryItems = async () => {
 
 export const getExcalidrawLibraryItems = async () => {
   const pageBlocks = await logseq.Editor.getPageBlocksTree(PAGE_NAME)
-  const codeBlock = pageBlocks?.[2]
+  const codeBlock = findSerializedDataBlock(pageBlocks)
   const libraryItems = getExcalidrawData(codeBlock?.content) as LibraryItems
-  return libraryItems
+  return libraryItems || DEFAULT_EXCALIDRAW_LIBRARY_ITEMS
 }
 
 export const updateExcalidrawLibraryItems = async (items: LibraryItems) => {
   const pageBlocks = await logseq.Editor.getPageBlocksTree(PAGE_NAME)
-  const codeBlock = pageBlocks?.[2]
+  const codeBlock = findSerializedDataBlock(pageBlocks)
+  if (!codeBlock?.uuid) return
   return logseq.Editor.updateBlock(codeBlock.uuid, genBlockData(items))
 }
 

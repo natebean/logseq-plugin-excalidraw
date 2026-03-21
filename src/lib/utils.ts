@@ -32,17 +32,21 @@ export const genBlockData = (excalidrawData: Record<string, unknown> | LibraryIt
   return `\`\`\`json\n${JSON.stringify(excalidrawData)}\n\`\`\``
 }
 
+export const findSerializedDataBlock = (blocks: BlockEntity[] = []) => {
+  return blocks.find((block) => Boolean(getExcalidrawData(block?.content)))
+}
+
 export const getExcalidrawInfoFromPage = async (
   srcPage: PageIdentity,
 ): Promise<{
   excalidrawData: ExcalidrawData
   /** block that stores the excalidraw data */
-  block: BlockEntity
+  block?: BlockEntity
   /** page blocks */
   rawBlocks: BlockEntity[]
 }> => {
   const pageBlocks = await logseq.Editor.getPageBlocksTree(srcPage)
-  const codeBlock = pageBlocks?.[3]
+  const codeBlock = findSerializedDataBlock(pageBlocks)
   const excalidrawData = getExcalidrawData(codeBlock?.content) as ExcalidrawData
   return {
     excalidrawData: excalidrawData || DEFAULT_EXCALIDRAW_DATA,

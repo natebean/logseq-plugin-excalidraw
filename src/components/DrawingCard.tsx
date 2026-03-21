@@ -35,6 +35,8 @@ export type IPageWithDrawing = PageEntity & {
   drawSvg: SVGSVGElement
   drawAlias?: string
   drawTag?: string
+  createdAt?: number
+  updatedAt?: number
   drawRawBlocks: BlockEntity[]
 }
 
@@ -74,6 +76,11 @@ const DrawingCard: React.FC<{
     })
     onDelete(page)
   }
+  const formatTimestamp = (timestamp?: number) => {
+    if (!timestamp) return 'Unknown'
+    return new Date(timestamp).toLocaleDateString()
+  }
+
   return (
     <>
       <div
@@ -132,11 +139,17 @@ const DrawingCard: React.FC<{
           )}
         </div>
         <div
-          className="truncate border-t px-2 flex items-center bg-stone-100 dark:bg-slate-800"
-          style={{ height: `${TITLE_HEIGHT}px` }}
+          className="border-t px-2 py-2 bg-stone-100 dark:bg-slate-800"
+          style={{ minHeight: `${TITLE_HEIGHT}px` }}
           onClick={() => onClickDrawing(page)}
         >
-          {page.drawAlias || page.name}
+          <div className="flex w-full flex-col gap-1">
+            <div className="truncate">{page.drawAlias || page.name}</div>
+            <div className="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <span className="truncate">{page.drawTag || 'Untagged'}</span>
+              <span>{formatTimestamp(page.updatedAt || page.createdAt)}</span>
+            </div>
+          </div>
         </div>
         <EditDrawingInfoModal
           open={editModalData?.open ?? false}

@@ -37,10 +37,11 @@ export default {
     },
   },
   createDrawing: {
-    tag: '🎨 Excalidraw: Create New Drawing',
+    tag: 'Excalidraw',
     errorMsg: 'Create excalidraw error',
   },
   common: {
     pageNotFound: 'The page corresponding to the drawing is not found',
+    untagged: 'Untagged',
   },
 }
